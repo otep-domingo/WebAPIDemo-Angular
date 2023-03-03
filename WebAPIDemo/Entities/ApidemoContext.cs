@@ -18,6 +18,7 @@ public partial class ApidemoContext : DbContext
     public virtual DbSet<User> Users { get; set; }
     public virtual DbSet<Accounts> Accounts  { get; set; }
     public virtual DbSet<Student> Student { get; set; }
+    public virtual DbSet<Course> Course { get; set; }
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) { }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

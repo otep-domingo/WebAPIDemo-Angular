@@ -18,9 +18,23 @@ namespace WebAPIDemo.Controllers
             DBContext = dBContext;
         }
         [HttpGet("GetStudents")]
-        public async Task<ActionResult<List<Student>>> Get()
+        public async Task<ActionResult<List<StudentDTO>>> Get()
         {
-            var students = await DBContext.Student.ToListAsync();
+            //var students = await DBContext.Student.ToListAsync();
+            var students = await (from s in DBContext.Student
+                            join c in DBContext.Course on s.CourseId equals c.id
+                            select new StudentDTO
+                            {
+                                Id = s.Id,
+                                StudentId = s.StudentId,
+                                Lastname = s.Lastname,
+                                Firstname = s.Firstname,
+                                DateEnrolled = s.DateEnrolled,
+                                CourseId = s.CourseId,
+                                CourseName = c.coursename
+                            }).ToListAsync();
+                          
+
             return students;
         }
 
@@ -34,7 +48,7 @@ namespace WebAPIDemo.Controllers
                 Lastname = a.Lastname,
                 Firstname = a.Firstname,
                 DateEnrolled = a.DateEnrolled,
-                Course = a.Course
+                CourseId = a.CourseId
 
             }).FirstOrDefaultAsync(a=>a.Id == id);
 
@@ -50,7 +64,7 @@ namespace WebAPIDemo.Controllers
         }
 
         [HttpPost("InsertStudent")]
-        public async Task<HttpStatusCode> InsertStudent(Student s)
+        public async Task<HttpStatusCode> InsertStudent(StudentDTO s)
         {
             var x = DBContext.Student.FirstOrDefault(a => a.StudentId == s.StudentId);
 
@@ -62,8 +76,16 @@ namespace WebAPIDemo.Controllers
             }
             else
             {
+                var a = new Student()
+                {
+                    StudentId = s.StudentId,
+                    Lastname = s.Lastname,
+                    Firstname = s.Firstname,
+                    CourseId = (int)s.CourseId,
+                    DateEnrolled = (DateTime)s.DateEnrolled
+                };
                 //insert to the database
-                DBContext.Student.Add(s);
+                DBContext.Student.Add(a);
                 await DBContext.SaveChangesAsync();
                 return HttpStatusCode.OK;
             }
@@ -76,7 +98,7 @@ namespace WebAPIDemo.Controllers
             e.StudentId = sDTO.StudentId;
             e.Lastname = sDTO.Lastname;
             e.Firstname = sDTO.Firstname;
-            e.Course = sDTO.Course;
+            e.CourseId = (int)sDTO.CourseId;
             e.DateEnrolled = DateTime.Now;
             await DBContext.SaveChangesAsync();
             return HttpStatusCode.Accepted;
